@@ -6,5 +6,5 @@ import react from "@vitejs/plugin-react";
 // If you name the repo something else, change "/itgc-interview-prep/" to "/<your-repo-name>/".
 export default defineConfig({
   plugins: [react()],
-  base: "/itgc-interview-prep/",
+  base: "/itgc-prep/",
 });
