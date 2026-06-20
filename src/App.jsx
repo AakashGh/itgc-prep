@@ -137,6 +137,51 @@ const difficultyColor = {
   "Situational": "#9b59b6",
 };
 
+const themes = {
+  dark: {
+    appBg: "#0D1B2A",
+    headerGrad: "linear-gradient(135deg, #0D1B2A 0%, #1B4F72 100%)",
+    text: "#F7F9FC",
+    textBright: "#E8F0F7",
+    accent: "#F5A623",
+    muted: "#8899AA",
+    faint: "#3D5A73",
+    cardFront: "linear-gradient(135deg, #122333 0%, #0D1B2A 100%)",
+    cardBack: "linear-gradient(135deg, #1B4F72 0%, #154360 100%)",
+    cardBorder: "rgba(255,255,255,0.08)",
+    cardBorderDone: "rgba(46,204,113,0.3)",
+    inputBg: "rgba(255,255,255,0.08)",
+    inputBorder: "rgba(255,255,255,0.12)",
+    answerText: "#C8D8E8",
+    tipText: "#B0C4D8",
+    divider: "rgba(255,255,255,0.05)",
+    bottomBg: "#0A1520",
+    btnBg: "rgba(255,255,255,0.05)",
+    progressTrack: "rgba(255,255,255,0.1)",
+  },
+  light: {
+    appBg: "#F4F7FB",
+    headerGrad: "linear-gradient(135deg, #1B4F72 0%, #2E6DA4 100%)",
+    text: "#1A2A3A",
+    textBright: "#0D1B2A",
+    accent: "#D4881A",
+    muted: "#5A7088",
+    faint: "#90A4B8",
+    cardFront: "#FFFFFF",
+    cardBack: "linear-gradient(135deg, #EAF2FA 0%, #DCE9F5 100%)",
+    cardBorder: "rgba(0,0,0,0.08)",
+    cardBorderDone: "rgba(39,174,96,0.4)",
+    inputBg: "rgba(0,0,0,0.04)",
+    inputBorder: "rgba(0,0,0,0.12)",
+    answerText: "#2A3B4D",
+    tipText: "#3D5266",
+    divider: "rgba(0,0,0,0.06)",
+    bottomBg: "#FFFFFF",
+    btnBg: "rgba(0,0,0,0.04)",
+    progressTrack: "rgba(0,0,0,0.08)",
+  },
+};
+
 export default function App() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [flipped, setFlipped] = useState({});
@@ -148,6 +193,14 @@ export default function App() {
     try { return JSON.parse(localStorage.getItem("itgc-answered")) || {}; } catch { return {}; }
   });
   const [search, setSearch] = useState("");
+  const [theme, setTheme] = useState(() => {
+    try { return localStorage.getItem("itgc-theme") || "dark"; } catch { return "dark"; }
+  });
+  const t = themes[theme];
+
+  useEffect(() => {
+    try { localStorage.setItem("itgc-theme", theme); } catch {}
+  }, [theme]);
 
   useEffect(() => {
     try { localStorage.setItem("itgc-bookmarked", JSON.stringify(bookmarked)); } catch {}
@@ -172,9 +225,10 @@ export default function App() {
   return (
     <div className="itgc-app" style={{
       fontFamily: "'Inter', -apple-system, sans-serif",
-      background: "#0D1B2A",
+      background: t.appBg,
       minHeight: "100vh",
-      color: "#F7F9FC",
+      color: t.text,
+      transition: "background 0.3s, color 0.3s",
     }}>
       <style>{`
         .itgc-app { max-width: 480px; margin: 0 auto; }
@@ -201,10 +255,11 @@ export default function App() {
       `}</style>
       {/* Header */}
       <div className="itgc-header-bar" style={{
-        background: "linear-gradient(135deg, #0D1B2A 0%, #1B4F72 100%)",
+        background: t.headerGrad,
         padding: "24px 20px 16px",
-        borderBottom: "1px solid rgba(245,166,35,0.2)",
+        borderBottom: `1px solid ${t.accent}33`,
         position: "sticky", top: 0, zIndex: 10,
+        transition: "background 0.3s",
       }}>
        <div className="itgc-header-inner">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
@@ -212,30 +267,44 @@ export default function App() {
             <div style={{ fontSize: 11, letterSpacing: "0.15em", color: "#F5A623", fontWeight: 600, textTransform: "uppercase", marginBottom: 2 }}>
               ITGC INTERVIEW PREP
             </div>
-            <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.2 }}>Question Bank</div>
+            <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.2, color: "#FFFFFF" }}>Question Bank</div>
           </div>
-          <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#F5A623", lineHeight: 1 }}>{progress}%</div>
-            <div style={{ fontSize: 10, color: "#8899AA", marginTop: 2 }}>Complete</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <button
+              onClick={() => setTheme(th => th === "dark" ? "light" : "dark")}
+              aria-label="Toggle theme"
+              style={{
+                background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)",
+                borderRadius: 20, width: 38, height: 38, cursor: "pointer", fontSize: 16,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "#FFFFFF", flexShrink: 0, transition: "all 0.2s"
+              }}
+            >
+              {theme === "dark" ? "☀️" : "🌙"}
+            </button>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 26, fontWeight: 800, color: "#F5A623", lineHeight: 1 }}>{progress}%</div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", marginTop: 2 }}>Complete</div>
+            </div>
           </div>
         </div>
 
         {/* Progress bar */}
-        <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 4, height: 4, marginBottom: 14 }}>
+        <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 4, height: 4, marginBottom: 14 }}>
           <div style={{ background: "#F5A623", height: 4, borderRadius: 4, width: `${progress}%`, transition: "width 0.4s ease" }} />
         </div>
 
         {/* Search */}
         <div style={{ position: "relative", marginBottom: 12 }}>
-          <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", fontSize: 14, opacity: 0.5 }}>🔍</span>
+          <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", fontSize: 14, opacity: 0.6 }}>🔍</span>
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search questions..."
             style={{
               width: "100%", padding: "9px 12px 9px 32px", borderRadius: 8,
-              background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)",
-              color: "#F7F9FC", fontSize: 13, outline: "none", boxSizing: "border-box"
+              background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)",
+              color: "#FFFFFF", fontSize: 13, outline: "none", boxSizing: "border-box"
             }}
           />
         </div>
@@ -246,9 +315,9 @@ export default function App() {
             <button key={cat} onClick={() => setActiveCategory(cat)} style={{
               flexShrink: 0, padding: "6px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600,
               border: "1px solid",
-              borderColor: activeCategory === cat ? "#F5A623" : "rgba(255,255,255,0.15)",
-              background: activeCategory === cat ? "rgba(245,166,35,0.15)" : "transparent",
-              color: activeCategory === cat ? "#F5A623" : "#8899AA",
+              borderColor: activeCategory === cat ? "#F5A623" : "rgba(255,255,255,0.25)",
+              background: activeCategory === cat ? "rgba(245,166,35,0.25)" : "transparent",
+              color: activeCategory === cat ? "#F5A623" : "rgba(255,255,255,0.8)",
               cursor: "pointer", transition: "all 0.2s"
             }}>
               {cat}
@@ -260,12 +329,12 @@ export default function App() {
         <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 8 }}>
           <button onClick={() => setShowBookmarked(b => !b)} style={{
             display: "flex", alignItems: "center", gap: 5, background: "transparent",
-            border: "none", color: showBookmarked ? "#F5A623" : "#8899AA",
+            border: "none", color: showBookmarked ? "#F5A623" : "rgba(255,255,255,0.8)",
             fontSize: 12, cursor: "pointer", padding: 0, fontWeight: showBookmarked ? 600 : 400
           }}>
             {showBookmarked ? "★" : "☆"} {showBookmarked ? "Bookmarked only" : "Show bookmarked"}
           </button>
-          <span style={{ color: "#3D5A73", fontSize: 11 }}>
+          <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 11 }}>
             {filtered.length} question{filtered.length !== 1 ? "s" : ""}
           </span>
         </div>
@@ -275,7 +344,7 @@ export default function App() {
       {/* Cards */}
       <div className="itgc-cards">
         {filtered.length === 0 && (
-          <div style={{ textAlign: "center", padding: "48px 0", color: "#8899AA", gridColumn: "1 / -1" }}>
+          <div style={{ textAlign: "center", padding: "48px 0", color: t.muted, gridColumn: "1 / -1" }}>
             <div style={{ fontSize: 32, marginBottom: 8 }}>🔎</div>
             <div>No questions match your filters</div>
           </div>
@@ -292,14 +361,14 @@ export default function App() {
               style={{
                 marginBottom: 14,
                 borderRadius: 14,
-                border: `1px solid ${isDone ? "rgba(46,204,113,0.3)" : "rgba(255,255,255,0.08)"}`,
-                background: isFlipped
-                  ? "linear-gradient(135deg, #1B4F72 0%, #154360 100%)"
-                  : "linear-gradient(135deg, #122333 0%, #0D1B2A 100%)",
+                border: `1px solid ${isDone ? t.cardBorderDone : t.cardBorder}`,
+                background: isFlipped ? t.cardBack : t.cardFront,
                 cursor: "pointer",
                 transition: "all 0.25s ease",
                 overflow: "hidden",
-                boxShadow: isFlipped ? "0 4px 20px rgba(27,79,114,0.4)" : "0 2px 8px rgba(0,0,0,0.3)"
+                boxShadow: isFlipped
+                  ? (theme === "dark" ? "0 4px 20px rgba(27,79,114,0.4)" : "0 4px 20px rgba(27,79,114,0.15)")
+                  : (theme === "dark" ? "0 2px 8px rgba(0,0,0,0.3)" : "0 2px 8px rgba(0,0,0,0.08)")
               }}
             >
               {/* Card header row */}
@@ -307,7 +376,7 @@ export default function App() {
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{
                     fontSize: 10, fontWeight: 700, letterSpacing: "0.1em",
-                    color: "#3D5A73", fontFamily: "monospace"
+                    color: t.faint, fontFamily: "monospace"
                   }}>
                     Q{String(q.id).padStart(2, "0")}
                   </span>
@@ -319,12 +388,12 @@ export default function App() {
                   }}>
                     {q.difficulty}
                   </span>
-                  <span style={{ fontSize: 10, color: "#3D5A73" }}>{q.category}</span>
+                  <span style={{ fontSize: 10, color: t.faint }}>{q.category}</span>
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
                   <button onClick={e => toggleBookmark(q.id, e)} style={{
                     background: "none", border: "none", cursor: "pointer",
-                    fontSize: 16, color: isBm ? "#F5A623" : "#3D5A73", padding: 0
+                    fontSize: 16, color: isBm ? "#F5A623" : t.faint, padding: 0
                   }}>{isBm ? "★" : "☆"}</button>
                   {isDone && <span style={{ fontSize: 14, color: "#2ecc71" }}>✓</span>}
                 </div>
@@ -332,7 +401,7 @@ export default function App() {
 
               {/* Question */}
               <div style={{ padding: "0 14px 12px" }}>
-                <p style={{ margin: 0, fontSize: 14, fontWeight: 500, lineHeight: 1.5, color: "#E8F0F7" }}>
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 500, lineHeight: 1.5, color: t.textBright }}>
                   {q.question}
                 </p>
               </div>
@@ -340,11 +409,11 @@ export default function App() {
               {/* Flip indicator */}
               {!isFlipped && (
                 <div style={{
-                  borderTop: "1px solid rgba(255,255,255,0.05)",
+                  borderTop: `1px solid ${t.divider}`,
                   padding: "8px 14px",
                   display: "flex", alignItems: "center", gap: 6
                 }}>
-                  <span style={{ fontSize: 10, color: "#3D5A73", letterSpacing: "0.1em" }}>TAP FOR ANSWER</span>
+                  <span style={{ fontSize: 10, color: t.faint, letterSpacing: "0.1em" }}>TAP FOR ANSWER</span>
                   <span style={{ color: "#F5A623", fontSize: 12 }}>→</span>
                 </div>
               )}
@@ -354,26 +423,26 @@ export default function App() {
                 <div style={{ borderTop: "1px solid rgba(245,166,35,0.15)", padding: "12px 14px" }}>
                   <div style={{
                     fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
-                    color: "#F5A623", marginBottom: 8, textTransform: "uppercase"
+                    color: t.accent, marginBottom: 8, textTransform: "uppercase"
                   }}>Answer</div>
-                  <p style={{ margin: "0 0 12px", fontSize: 13, lineHeight: 1.65, color: "#C8D8E8" }}>
+                  <p style={{ margin: "0 0 12px", fontSize: 13, lineHeight: 1.65, color: t.answerText }}>
                     {q.answer}
                   </p>
                   <div style={{
-                    background: "rgba(245,166,35,0.08)", borderRadius: 8,
+                    background: "rgba(245,166,35,0.1)", borderRadius: 8,
                     padding: "8px 10px", borderLeft: "3px solid #F5A623",
                     marginBottom: 12
                   }}>
-                    <div style={{ fontSize: 10, color: "#F5A623", fontWeight: 700, marginBottom: 3 }}>💡 INTERVIEW TIP</div>
-                    <div style={{ fontSize: 12, color: "#B0C4D8", lineHeight: 1.5 }}>{q.tip}</div>
+                    <div style={{ fontSize: 10, color: t.accent, fontWeight: 700, marginBottom: 3 }}>💡 INTERVIEW TIP</div>
+                    <div style={{ fontSize: 12, color: t.tipText, lineHeight: 1.5 }}>{q.tip}</div>
                   </div>
                   <button
                     onClick={e => markAnswered(q.id, e)}
                     style={{
                       width: "100%", padding: "9px", borderRadius: 8, fontSize: 13, fontWeight: 600,
-                      border: `1px solid ${isDone ? "rgba(46,204,113,0.5)" : "rgba(255,255,255,0.15)"}`,
-                      background: isDone ? "rgba(46,204,113,0.15)" : "rgba(255,255,255,0.05)",
-                      color: isDone ? "#2ecc71" : "#8899AA",
+                      border: `1px solid ${isDone ? "rgba(46,204,113,0.5)" : t.inputBorder}`,
+                      background: isDone ? "rgba(46,204,113,0.15)" : t.btnBg,
+                      color: isDone ? "#2ecc71" : t.muted,
                       cursor: "pointer", transition: "all 0.2s"
                     }}
                   >
@@ -389,10 +458,11 @@ export default function App() {
       {/* Bottom stats bar */}
       <div className="itgc-bottombar" style={{
         position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)",
-        width: "100%", background: "#0A1520",
+        width: "100%", background: t.bottomBg,
         borderTop: "1px solid rgba(245,166,35,0.15)",
         padding: "10px 20px 16px",
-        display: "flex", justifyContent: "space-around"
+        display: "flex", justifyContent: "space-around",
+        transition: "background 0.3s",
       }}>
         {[
           { label: "Total", value: questions.length },
@@ -401,7 +471,7 @@ export default function App() {
         ].map(stat => (
           <div key={stat.label} style={{ textAlign: "center" }}>
             <div style={{ fontSize: 18, fontWeight: 700, color: "#F5A623" }}>{stat.value}</div>
-            <div style={{ fontSize: 10, color: "#3D5A73", marginTop: 1 }}>{stat.label}</div>
+            <div style={{ fontSize: 10, color: t.faint, marginTop: 1 }}>{stat.label}</div>
           </div>
         ))}
       </div>
