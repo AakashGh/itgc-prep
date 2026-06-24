@@ -2,6 +2,15 @@ import { useState, useEffect } from "react";
 
 const categories = ["All", "Access Mgmt", "Change Mgmt", "IT Operations", "SOX/ICFR", "SOC 1/2", "Behavioural"];
 
+const categoryIcon = {
+  "Access Mgmt": "🔑",
+  "Change Mgmt": "🔧",
+  "IT Operations": "⚙️",
+  "SOX/ICFR": "📊",
+  "SOC 1/2": "🛡️",
+  "Behavioural": "💬",
+};
+
 const questions = [
   // Access Management
   {
@@ -309,6 +318,26 @@ export default function App() {
         @media (min-width: 1100px) {
           .itgc-cards { grid-template-columns: repeat(3, 1fr); }
         }
+        .itgc-card {
+          transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease !important;
+          position: relative;
+        }
+        @media (hover: hover) {
+          .itgc-card:hover { transform: translateY(-3px); }
+        }
+        .itgc-card:active { transform: scale(0.992); }
+        .itgc-tap { transition: gap 0.18s ease; }
+        @media (hover: hover) {
+          .itgc-card:hover .itgc-tap-arrow { transform: translateX(4px); }
+        }
+        .itgc-tap-arrow { transition: transform 0.18s ease; display: inline-block; }
+        .itgc-cat-chip { transition: all 0.18s ease; }
+        .itgc-cat-chip:active { transform: scale(0.94); }
+        .itgc-reveal { animation: itgcFade 0.28s ease; }
+        @keyframes itgcFade {
+          from { opacity: 0; transform: translateY(-4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
       `}</style>
       {/* Header */}
       <div className="itgc-header-bar" style={{
@@ -419,13 +448,13 @@ export default function App() {
                 marginBottom: 14,
                 borderRadius: 14,
                 border: `1px solid ${isDone ? t.cardBorderDone : t.cardBorder}`,
+                borderLeft: `4px solid ${isDone ? "#2ecc71" : difficultyColor[q.difficulty]}`,
                 background: isFlipped ? t.cardBack : t.cardFront,
                 cursor: "pointer",
-                transition: "all 0.25s ease",
                 overflow: "hidden",
                 boxShadow: isFlipped
-                  ? (theme === "dark" ? "0 4px 20px rgba(27,79,114,0.4)" : "0 4px 20px rgba(27,79,114,0.15)")
-                  : (theme === "dark" ? "0 2px 8px rgba(0,0,0,0.3)" : "0 2px 8px rgba(0,0,0,0.08)")
+                  ? (theme === "dark" ? "0 8px 28px rgba(27,79,114,0.45)" : "0 8px 28px rgba(27,79,114,0.18)")
+                  : (theme === "dark" ? "0 3px 12px rgba(0,0,0,0.35)" : "0 3px 12px rgba(0,0,0,0.07)")
               }}
             >
               {/* Card header row */}
@@ -438,14 +467,19 @@ export default function App() {
                     Q{String(q.id).padStart(2, "0")}
                   </span>
                   <span style={{
-                    fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 10,
+                    fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 10,
                     background: `${difficultyColor[q.difficulty]}22`,
                     color: difficultyColor[q.difficulty],
-                    border: `1px solid ${difficultyColor[q.difficulty]}44`
+                    border: `1px solid ${difficultyColor[q.difficulty]}44`,
+                    display: "inline-flex", alignItems: "center", gap: 4,
                   }}>
+                    <span style={{ width: 5, height: 5, borderRadius: "50%", background: difficultyColor[q.difficulty], display: "inline-block" }} />
                     {q.difficulty}
                   </span>
-                  <span style={{ fontSize: 10, color: t.faint }}>{q.category}</span>
+                  <span style={{ fontSize: 10, color: t.muted, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    <span style={{ fontSize: 11 }}>{categoryIcon[q.category]}</span>
+                    {q.category}
+                  </span>
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
                   <button onClick={e => toggleBookmark(q.id, e)} style={{
@@ -465,23 +499,24 @@ export default function App() {
 
               {/* Flip indicator */}
               {!isFlipped && (
-                <div style={{
+                <div className="itgc-tap" style={{
                   borderTop: `1px solid ${t.divider}`,
-                  padding: "8px 14px",
+                  padding: "9px 14px",
                   display: "flex", alignItems: "center", gap: 6
                 }}>
-                  <span style={{ fontSize: 10, color: t.faint, letterSpacing: "0.1em" }}>TAP FOR ANSWER</span>
-                  <span style={{ color: "#F5A623", fontSize: 12 }}>→</span>
+                  <span style={{ fontSize: 10, color: t.faint, letterSpacing: "0.1em", fontWeight: 600 }}>TAP FOR ANSWER</span>
+                  <span className="itgc-tap-arrow" style={{ color: "#F5A623", fontSize: 12 }}>→</span>
                 </div>
               )}
 
               {/* Answer */}
               {isFlipped && (
-                <div style={{ borderTop: "1px solid rgba(245,166,35,0.15)", padding: "12px 14px" }}>
+                <div className="itgc-reveal" style={{ borderTop: "1px solid rgba(245,166,35,0.15)", padding: "12px 14px" }}>
                   <div style={{
                     fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
-                    color: t.accent, marginBottom: 8, textTransform: "uppercase"
-                  }}>Answer</div>
+                    color: t.accent, marginBottom: 8, textTransform: "uppercase",
+                    display: "flex", alignItems: "center", gap: 5
+                  }}><span>📋</span> Answer</div>
                   <p style={{ margin: "0 0 12px", fontSize: 13, lineHeight: 1.65, color: t.answerText }}>
                     {q.answer}
                   </p>
