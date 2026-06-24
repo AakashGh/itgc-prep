@@ -129,12 +129,69 @@ const questions = [
     answer: "Three major shifts: (1) Continuous auditing and monitoring — real-time control testing using data analytics instead of point-in-time sampling; (2) Cloud and SaaS controls — the rise of shared responsibility models means auditors need deep knowledge of CSP controls, SCUDs, and vendor SOC reports; (3) AI risk — as organizations embed AI in financial processes, auditors need to assess model governance, data integrity, and algorithm change management. The value of an IT auditor is increasingly in judgment and risk translation, not just control testing execution.",
     tip: "Mentioning AI governance in financial processes shows forward-thinking — use it for EY/Big 4 rounds."
   },
+  // Scenario / Manager-level differentiators
+  {
+    id: 21, category: "Access Mgmt", difficulty: "Scenario",
+    question: "A legacy system can't store change or activity logs. How do you determine who changed what?",
+    answer: "When the system itself provides no audit trail, I pivot to compensating and surrounding controls. First, I tighten the population of who COULD have made the change — restrict and review the small number of users with write/admin access, since fewer hands means a narrower accountability window. Then I look for evidence outside the system: change tickets and approvals in the ITSM tool, DBA query logs or database-level auditing if the data sits in a separate DB, network/access logs showing who logged in during the change window, and any downstream reconciliation that would catch an unauthorized change. I'd also document this as a control gap and recommend either enabling logging (if technically possible), wrapping the system in a privileged access management layer that logs sessions, or migrating off it. The audit conclusion rests on whether the compensating controls collectively reduce the risk to acceptable — not on pretending the missing log doesn't matter.",
+    tip: "The key insight: narrow the population + find external evidence. Naming PAM session logging as a fix signals Manager-level thinking."
+  },
+  {
+    id: 22, category: "Access Mgmt", difficulty: "Scenario",
+    question: "You find a terminated employee's access was not revoked for over a month. What do you do?",
+    answer: "I treat it as a potential control failure but investigate before concluding. First, scope it: is this one instance or a pattern across the termination population? One miss is an exception; several is a systemic deficiency. Then assess actual exposure — did the account get USED after termination? I check login/activity logs for the dormant period. An unused orphaned account is lower risk than one showing post-termination logins, which could indicate misuse and would escalate severity sharply. I evaluate the financial-reporting relevance: did the account have access to systems or data feeding the financials? I confirm remediation (access now revoked) and root cause — broken HR-to-IT deprovisioning handoff, missed notification, manual process gap. Finally I size the deficiency: likelihood and magnitude determine whether it's a deficiency, significant deficiency, or material weakness, and I document compensating controls (e.g., the account couldn't transact without other approvals).",
+    tip: "Interviewers want to see you check whether the account was actually USED, not just that it existed. That distinction drives severity."
+  },
+  {
+    id: 23, category: "Access Mgmt", difficulty: "Scenario",
+    question: "Access was revoked at the Active Directory level but not at the application level. Is there residual risk?",
+    answer: "Yes — and identifying that residual risk is the whole point. It depends on how the application authenticates. If the app relies entirely on AD/SSO for authentication, then killing the AD account effectively blocks login, and residual risk is low — the orphaned app-level entitlement can't be exercised without a valid AD credential. But if the application has its OWN local authentication (a separate username/password not tied to AD), then the user can still log in directly to the app, bypassing the disabled AD account entirely — that's real residual risk, especially for terminated users or SoD conflicts. So I'd test the authentication architecture first, then check for local/standalone accounts, service accounts, and back-door login paths. The lesson is that layered access requires revocation at EVERY layer; assuming AD removal covers everything is a common and dangerous gap.",
+    tip: "The sharp answer hinges on whether the app has local auth independent of AD. Say that explicitly — it shows you understand layered access."
+  },
+  {
+    id: 24, category: "Access Mgmt", difficulty: "Scenario",
+    question: "How do you test an SSO-integrated application, and which attributes matter?",
+    answer: "With SSO, authentication is delegated to the identity provider (IdP) — Okta, Azure AD, Ping — so my testing splits across two layers. At the IdP layer I verify: the authentication policy (MFA enforcement, session timeout, conditional access rules), how users are provisioned and deprovisioned to the app (SCIM auto-provisioning vs manual), and that the IdP's own access controls are sound. At the application layer I verify: that the app actually trusts only the IdP and has no bypass/local login, how authorization (roles/entitlements) is assigned — often the app still manages its own roles even when the IdP handles login — and that JIT-provisioned users land with correct least-privilege roles. Key attributes to test: the SAML/OIDC assertion mapping (which IdP attributes map to app identity and role), group-to-role mappings, deprovisioning propagation timing, and orphaned local accounts. The classic SSO gap is assuming the IdP covers authorization when the app still governs entitlements separately.",
+    tip: "Separate authentication (IdP) from authorization (app roles). Naming SCIM, SAML assertion mapping, and JIT provisioning shows real depth."
+  },
+  {
+    id: 25, category: "Access Mgmt", difficulty: "Scenario",
+    question: "Walk me through end-to-end control testing of privileged access.",
+    answer: "I'd structure it across the full lifecycle. (1) Inventory & justification: obtain a complete system-generated list of all privileged accounts (admin, root, service, firefighter), confirm each is inventoried, owned, and business-justified — no orphans or unexplained accounts. (2) Provisioning: test that privileged access was granted through proper authorization (request + appropriate approval), not ad hoc. (3) Authentication strength: verify MFA on privileged accounts, no shared credentials, vaulting of service-account passwords. (4) Usage & monitoring: confirm privileged sessions are logged and reviewed, and that emergency/firefighter access is time-bound, ticket-driven, and fully logged with after-the-fact review. (5) Periodic review: test that privileged access is recertified (typically quarterly) by an appropriate reviewer, with revocations actioned and evidenced. (6) Deprovisioning: confirm privileged access is removed promptly on role change or termination. Throughout, I prefer system-generated evidence over client spreadsheets, and I sample across the period rather than at a point in time. The conclusion ties each step back to the risk that someone could make an unauthorized, unmonitored change to a financially-relevant system.",
+    tip: "Walk the lifecycle: inventory → provision → authenticate → monitor → review → deprovision. PAM/CyberArk + firefighter access are credibility markers."
+  },
+  // Conceptual anchors
+  {
+    id: 26, category: "SOX/ICFR", difficulty: "Core",
+    question: "What is Completeness and Accuracy (C&A) of a system-generated report, and why does it matter?",
+    answer: "C&A is the assurance that data used in a control — typically a system-generated report or query — is both complete (all relevant records are present, nothing dropped) and accurate (the values and logic are correct). It matters because a control is only as reliable as the information it runs on: if a manager reviews an 'aged AR report' to assess bad debt, but the report silently omits a class of invoices or miscalculates aging, the control fails even if the manager does their job perfectly. To test C&A I verify the report's source data, the report logic/parameters, and that it can't be altered before use — often by re-performing, reconciling to source, or testing the underlying query. C&A is foundational to relying on any IPE (Information Produced by the Entity).",
+    tip: "Use the term IPE (Information Produced by the Entity) — it's the formal phrase auditors and interviewers expect."
+  },
+  {
+    id: 27, category: "SOX/ICFR", difficulty: "Core",
+    question: "What is the difference between inherent risk and residual risk?",
+    answer: "Inherent risk is the level of risk that exists BEFORE any controls are applied — the raw exposure given the nature of the process, system, or transaction. Residual risk is what REMAINS AFTER controls are designed and operating. The relationship is: inherent risk minus the risk-reducing effect of controls equals residual risk. For example, the inherent risk of unauthorized changes to a financial system is high; effective change management controls reduce that to a low residual risk. As an auditor, I assess inherent risk to decide where to focus, then evaluate whether controls bring residual risk to an acceptable level. If residual risk is still too high, either controls are inadequate or compensating controls are needed.",
+    tip: "Frame it as a simple equation: inherent − control effect = residual. Clean and memorable for interviewers."
+  },
+  {
+    id: 28, category: "SOX/ICFR", difficulty: "Core",
+    question: "What is the difference between Test of Design (TOD) and Test of Operating Effectiveness (TOE)?",
+    answer: "Test of Design (TOD) asks: 'Is this control capable of preventing or detecting the risk if it operates as intended?' It's evaluated at a point in time, typically by inspecting the control's design, walking it through once, and confirming it logically addresses the risk. Test of Operating Effectiveness (TOE) asks: 'Did the control actually operate consistently and effectively throughout the period?' It requires sampling multiple instances across the audit period to confirm the control worked every time, not just on paper. A control can pass TOD but fail TOE — well-designed but inconsistently performed. You always do TOD first; there's no point testing operation of a control that's fundamentally mis-designed. This maps directly to SOC 1 Type I (design only) vs Type II (design + operating effectiveness over a period).",
+    tip: "Linking TOD/TOE to SOC 1 Type I vs Type II shows you connect concepts across frameworks — a Manager-level signal."
+  },
+  {
+    id: 29, category: "SOX/ICFR", difficulty: "Advanced",
+    question: "Distinguish a control deficiency, a significant deficiency, and a material weakness.",
+    answer: "These are escalating severity levels of a control problem. A Control Deficiency exists when a control is missing or not operating effectively — the design or operation doesn't allow management to prevent or detect misstatements on a timely basis. A Significant Deficiency is a deficiency (or combination) that is less severe than a material weakness but important enough to merit attention by those charged with governance — there's more than a remote likelihood of a misstatement that is more than inconsequential. A Material Weakness is the most severe: a deficiency (or combination) where there is a reasonable possibility that a material misstatement of the financial statements would not be prevented or detected on a timely basis. Severity is judged on two axes — likelihood of misstatement and magnitude/materiality — plus whether compensating controls mitigate the exposure. PCAOB AS 2201 governs this for ICFR.",
+    tip: "Anchor severity on the two axes — likelihood and magnitude — and cite PCAOB AS 2201. That's exactly what Big 4 interviewers listen for."
+  },
 ];
 
 const difficultyColor = {
   "Core": "#2ecc71",
   "Advanced": "#F5A623",
   "Situational": "#9b59b6",
+  "Scenario": "#e67e22",
 };
 
 const themes = {
